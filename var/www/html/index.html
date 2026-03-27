@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GridIQ — AI Grid Intelligence</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060E1F;--bg2:#0D1B35;--bg3:#142644;--card:#1A2A42;
+  --blue:#3A86FF;--teal:#00D4AA;--fire:#FF6B35;--green:#22C55E;
+  --red:#FF4444;--yellow:#F59E0B;--purple:#A855F7;
+  --text:#E8EDF5;--muted:#6B7D94;--border:rgba(58,134,255,0.15);
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+
+/* NAV */
+nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-size:20px;font-weight:700;letter-spacing:-0.5px}
+.logo span{color:var(--blue)}
+.nav-links{display:flex;gap:16px;align-items:center}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:13px;transition:color 0.2s}
+.nav-links a:hover{color:var(--text)}
+.nav-badge{background:var(--green);color:#000;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
+
+/* GRID */
+.container{max-width:1400px;margin:0 auto;padding:24px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.card-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card-title .dot{width:6px;height:6px;border-radius:50%}
+
+/* KPI */
+.kpi-num{font-size:36px;font-weight:700;line-height:1;margin-bottom:4px}
+.kpi-label{font-size:12px;color:var(--muted)}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* WEATHER STRIP */
+.weather-strip{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.weather-item{text-align:center}
+.weather-val{font-size:22px;font-weight:700}
+.weather-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.red-flag{background:rgba(255,68,68,0.15);border:1px solid rgba(255,68,68,0.4);border-radius:8px;padding:8px 16px;color:var(--red);font-size:13px;font-weight:600;display:none}
+.red-flag.active{display:block}
+
+/* ALERT LIST */
+.alert-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.alert-item:last-child{border-bottom:none}
+.alert-badge{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.alert-name{font-size:13px;font-weight:500;flex:1}
+.alert-detail{font-size:11px;color:var(--muted)}
+.alert-tag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
+
+/* CIRCUIT LIST */
+.circuit-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.circuit-row:last-child{border-bottom:none}
+.circuit-name{font-size:13px;flex:1}
+.circuit-score{font-size:13px;font-weight:600;min-width:40px;text-align:right}
+.rec-badge{font-size:10px;padding:2px 10px;border-radius:20px;font-weight:600}
+
+/* CREW ROW */
+.crew-row{padding:10px 0;border-bottom:1px solid var(--border)}
+.crew-row:last-child{border-bottom:none}
+.crew-name{font-size:13px;font-weight:600;margin-bottom:4px}
+.crew-meta{font-size:11px;color:var(--muted);display:flex;gap:12px}
+
+/* PROGRESS BAR */
+.progress-bar{height:4px;background:var(--bg3);border-radius:2px;margin-top:8px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;transition:width 0.5s ease}
+
+/* SATELLITE ROW */
+.sat-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.sat-row:last-child{border-bottom:none}
+.sat-name{font-size:12px;flex:1}
+.ndvi-bar{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.ndvi-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444)}
+
+/* STATUS */
+.status-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px}
+.status-val{font-weight:600}
+
+/* FOOTER */
+footer{text-align:center;padding:32px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);margin-top:24px}
+
+/* LOADING */
+.loading{color:var(--muted);font-size:12px;font-style:italic}
+
+@media(max-width:768px){.grid-4,.grid-3{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}}
+@media(max-width:480px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Grid<span>IQ</span></div>
+  <div class="nav-links">
+    <span class="nav-badge" id="liveStatus">● LIVE</span>
+    <a href="/docs">API Docs</a>
+    <a href="https://normandintech.github.io/gridiq-mobile">📱 Field App</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- WEATHER STRIP -->
+  <div class="weather-strip" id="weatherStrip">
+    <div class="weather-item">
+      <div class="weather-val" id="wTemp">--</div>
+      <div class="weather-label">Temperature</div>
+    </div>
+    <div class="weather-item">
+      <div class="weather-val" id="wWind">--</div>
+      <div class="weather-label">Wind Speed</div>
+    </div>
+    <div class="weather-item">
+      <div class="weather-val" id="wHumidity">--</div>
+      <div class="weather-label">Humidity</div>
+    </div>
+    <div class="weather-item">
+      <div class="weather-val" id="wFWI">--</div>
+      <div class="weather-label">Fire Weather Index</div>
+    </div>
+    <div class="weather-item">
+      <div class="weather-val" id="wSag">--</div>
+      <div class="weather-label">Conductor Sag Risk</div>
+    </div>
+    <div class="weather-item">
+      <div class="weather-val" id="wStation">--</div>
+      <div class="weather-label">Weather Station</div>
+    </div>
+    <div class="red-flag" id="redFlagBanner">🔴 RED FLAG WARNING ACTIVE</div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="grid-4">
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--red)"></div>Critical Alerts</div>
+      <div class="kpi-num" id="kpiCritical" style="color:var(--red)">--</div>
+      <div class="kpi-label">Active faults</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--yellow)"></div>High Risk Assets</div>
+      <div class="kpi-num" id="kpiHigh" style="color:var(--yellow)">--</div>
+      <div class="kpi-label">Predictive scoring</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--teal)"></div>CO2e Avoided</div>
+      <div class="kpi-num" id="kpiCarbon" style="color:var(--teal)">--</div>
+      <div class="kpi-label">Tonnes this period</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Crews Deployed</div>
+      <div class="kpi-num" id="kpiCrews" style="color:var(--blue)">--</div>
+      <div class="kpi-label">Today's schedule</div>
+    </div>
+  </div>
+
+  <!-- MIDDLE ROW -->
+  <div class="grid-3">
+
+    <!-- PREDICTIVE RANKINGS -->
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--purple)"></div>Predictive Fault Risk</div>
+      <div id="predictiveList"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- PSPS CIRCUITS -->
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--fire)"></div>PSPS Circuit Status</div>
+      <div id="circuitList"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- SATELLITE NDVI -->
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--green)"></div>Satellite Vegetation (NDVI)</div>
+      <div id="satelliteList"><div class="loading">Loading...</div></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="grid-2">
+
+    <!-- CREW SCHEDULE -->
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Today's Crew Schedule</div>
+      <div id="crewList"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- CARBON CREDITS -->
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--teal)"></div>Carbon Credit Report</div>
+      <div id="carbonList"><div class="loading">Loading...</div></div>
+    </div>
+
+  </div>
+
+
+  <div class="card" style="margin-bottom:24px"><div class="card-title"><div class="dot" style="background:var(--red)"></div>Outage Prediction — 24h Circuit Forecast</div><div id="outagePanel"><div class="loading">Loading...</div></div></div><div class="grid-3" style="margin-bottom:24px">
+    <div class="card"><div class="card-title"><div class="dot" style="background:var(--purple)"></div>Drone Inspections</div><div id="dronePanel"><div class="loading">Loading...</div></div></div>
+    <div class="card"><div class="card-title"><div class="dot" style="background:var(--teal)"></div>Mutual Aid Network</div><div id="mutualAidPanel"><div class="loading">Loading...</div></div></div>
+    <div class="card"><div class="card-title"><div class="dot" style="background:var(--fire)"></div>Regulatory Monitoring</div><div id="regulatoryPanel"><div class="loading">Loading...</div></div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:24px">
+    <div class="card"><div class="card-title"><div class="dot" style="background:var(--green)"></div>LiDAR-as-a-Service</div><div id="lidarPanel"><div class="loading">Loading...</div></div></div>
+    <div class="card"><div class="card-title"><div class="dot" style="background:var(--blue)"></div>API Status</div><div id="apiPanel"><div class="loading">Loading...</div></div></div>
+  </div></div>
+
+<footer>
+  GridIQ Platform v1.0.0 &nbsp;·&nbsp; Built in Paradise, CA &nbsp;·&nbsp;
+  <a href="https://gridiq.ink/docs" style="color:var(--blue)">API Docs</a> &nbsp;·&nbsp;
+  <a href="https://normandintech.github.io/gridiq-mobile" style="color:var(--teal)">Field App</a> &nbsp;·&nbsp;
+  NormandinTECH © 2026
+</footer>
+
+<script>
+const API = '/api/v1';
+const REC_COLORS = {
+  'DE-ENERGIZE': {bg:'rgba(255,68,68,0.15)',color:'#FF4444'},
+  'WARNING': {bg:'rgba(245,158,11,0.15)',color:'#F59E0B'},
+  'WATCH': {bg:'rgba(58,134,255,0.15)',color:'#3A86FF'},
+  'MONITOR': {bg:'rgba(34,197,94,0.1)',color:'#22C55E'},
+};
+const RISK_COLORS = {
+  'CRITICAL':'#FF4444','HIGH':'#F59E0B','MEDIUM':'#3A86FF','LOW':'#22C55E'
+};
+
+async function fetchJSON(url) {
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 15000);
+    const r = await fetch(url, {signal: ctrl.signal});
+    clearTimeout(tid);
+    return await r.json();
+  } catch(e) {
+    return null;
+  }
+}
+
+async function loadWeather() {
+  const d = await fetchJSON(API + '/weather/grid-impact');
+  if (!d) return;
+  document.getElementById('wTemp').textContent = d.temperature_f ? d.temperature_f + 'F' : '--';
+  document.getElementById('wWind').textContent = d.wind_speed_mph ? d.wind_speed_mph + ' mph' : '--';
+  document.getElementById('wHumidity').textContent = d.humidity_pct ? d.humidity_pct + '%' : '--';
+  document.getElementById('wFWI').textContent = d.fire_weather_index || '--';
+  document.getElementById('wSag').textContent = d.conductor_sag_risk || '--';
+  document.getElementById('wStation').textContent = d.station_name || '--';
+  if (d.red_flag_warning) {
+    document.getElementById('redFlagBanner').classList.add('active');
+    document.body.style.borderTop = '3px solid #FF4444';
+  }
+}
+
+async function loadPredictive() {
+  const d = await fetchJSON(API + '/predict/rankings?limit=6');
+  if (!d) return;
+  document.getElementById('kpiHigh').textContent = d.rankings.filter(r => r.risk_level==='HIGH'||r.risk_level==='CRITICAL').length;
+  const html = d.rankings.map(r => {
+    const color = RISK_COLORS[r.risk_level] || '#6B7D94';
+    const pct = r.score_30d;
+    return '<div class="alert-item">' +
+      '<div class="alert-badge" style="background:'+color+'"></div>' +
+      '<div style="flex:1"><div class="alert-name">'+r.asset_name+'</div>' +
+      '<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%;background:'+color+'"></div></div></div>' +
+      '<div style="text-align:right"><div style="font-size:13px;font-weight:600;color:'+color+'">'+pct+'%</div>' +
+      '<div style="font-size:10px;color:var(--muted)">30d risk</div></div></div>';
+  }).join('');
+  document.getElementById('predictiveList').innerHTML = html;
+}
+
+async function loadPSPS() {
+  const d = await fetchJSON(API + '/psps/circuits');
+  if (!d) return;
+  const html = d.circuits.map(c => {
+    const rc = REC_COLORS[c.recommendation] || REC_COLORS['MONITOR'];
+    return '<div class="circuit-row">' +
+      '<div style="flex:1"><div class="circuit-name">'+c.circuit_name+'</div>' +
+      '<div style="font-size:11px;color:var(--muted)">'+c.customers_affected.toLocaleString()+' customers</div></div>' +
+      '<div style="text-align:right">' +
+      '<div class="rec-badge" style="background:'+rc.bg+';color:'+rc.color+'">'+c.recommendation+'</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">Score: '+c.composite_score+'</div></div></div>';
+  }).join('');
+  document.getElementById('circuitList').innerHTML = html;
+}
+
+async function loadSatellite() {
+  const d = await fetchJSON(API + '/satellite/summary');
+  if (!d) return;
+  const html = d.corridors ? d.corridors.map(c => {
+    const pct = Math.round(c.ndvi_mean * 100);
+    const color = c.canopy_encroachment_risk==='HIGH'?'#FF4444':c.canopy_encroachment_risk==='MEDIUM'?'#F59E0B':'#22C55E';
+    return '<div class="sat-row">' +
+      '<div style="flex:1"><div class="sat-name">'+c.corridor_name+'</div>' +
+      '<div style="font-size:10px;color:var(--muted)">NDVI: '+c.ndvi_mean+' · '+c.vegetation_density+'</div></div>' +
+      '<div style="text-align:right;font-size:12px;font-weight:600;color:'+color+'">'+c.canopy_encroachment_risk+'</div></div>';
+  }).join('') : (d.highest_risk||[]).map(c => {
+    const color = c.canopy_encroachment_risk==='HIGH'?'#FF4444':'#F59E0B';
+    return '<div class="sat-row">' +
+      '<div style="flex:1"><div class="sat-name">'+c.corridor_name+'</div>' +
+      '<div style="font-size:10px;color:var(--muted)">NDVI: '+c.ndvi_mean+'</div></div>' +
+      '<div style="font-size:12px;font-weight:600;color:'+color+'">'+c.canopy_encroachment_risk+'</div></div>';
+  }).join('');
+  document.getElementById('satelliteList').innerHTML = html + '<div style="margin-top:10px;font-size:11px;color:var(--muted)">Avg NDVI: '+d.avg_ndvi+' · Sentinel-2 · ESA Copernicus</div>';
+}
+
+async function loadCrew() {
+  const d = await fetchJSON(API + '/crew/summary');
+  if (!d) return;
+  document.getElementById('kpiCrews').textContent = d.crews_deployed;
+  const html = '<div class="status-row"><span>Work orders scheduled</span><span class="status-val" style="color:var(--green)">'+d.scheduled+' / '+d.total_work_orders+'</span></div>' +
+    '<div class="status-row"><span>Total crew hours</span><span class="status-val">'+d.total_crew_hours+'h</span></div>' +
+    '<div class="status-row"><span>Total drive time</span><span class="status-val">'+d.total_drive_time_minutes+' min</span></div>' +
+    '<div class="status-row"><span>Critical jobs</span><span class="status-val" style="color:var(--red)">'+d.critical_jobs_scheduled+'</span></div>' +
+    '<div class="status-row"><span>High priority jobs</span><span class="status-val" style="color:var(--yellow)">'+d.high_jobs_scheduled+'</span></div>' +
+    '<div class="status-row"><span>Weather blocked</span><span class="status-val">'+d.weather_blocked+'</span></div>';
+  document.getElementById('crewList').innerHTML = html;
+}
+
+async function loadCarbon() {
+  const d = await fetchJSON(API + '/carbon/summary');
+  if (!d) return;
+  const co2e = d.total_co2e_avoided_tonnes;
+  document.getElementById('kpiCarbon').textContent = co2e > 1000 ? (co2e/1000).toFixed(1)+'K' : co2e;
+  const html = '<div class="status-row"><span>CO2e avoided</span><span class="status-val" style="color:var(--teal)">'+co2e.toLocaleString()+' tonnes</span></div>' +
+    '<div class="status-row"><span>Carbon credit value</span><span class="status-val" style="color:var(--green)">$'+d.total_value_usd.toLocaleString()+'</span></div>' +
+    '<div class="status-row"><span>Credits generated</span><span class="status-val">'+d.total_credits_generated+'</span></div>' +
+    '<div class="status-row"><span>Equivalent cars off road</span><span class="status-val">'+d.equivalent_cars_off_road_1yr.toLocaleString()+'</span></div>' +
+    '<div class="status-row"><span>Methodology</span><span class="status-val" style="font-size:11px;color:var(--muted)">Verra VCS VM0044</span></div>' +
+    '<div class="status-row"><span>Carbon price</span><span class="status-val">$'+d.carbon_price_per_tonne_usd+'/tonne</span></div>';
+  document.getElementById('carbonList').innerHTML = html;
+}
+
+async function loadFaults() {
+  const d = await fetchJSON(API + '/asset-intelligence/faults');
+  if (d && d.faults) {
+    const crit = d.faults.filter(f => f.severity==='critical').length;
+    document.getElementById('kpiCritical').textContent = crit;
+  }
+}
+
+async function loadAll() {
+  await Promise.allSettled([
+    loadOutage(),loadDrone(),loadMutualAid(),loadRegulatory(),loadLiDAR(),loadAPIStatus(),
+    loadWeather(),
+    loadPredictive(),
+    loadPSPS(),
+    loadSatellite(),
+    loadCrew(),
+    loadCarbon(),
+    loadFaults(),
+  ]);
+  document.getElementById('liveStatus').textContent = '● LIVE';
+}
+
+
+async function loadDrone(){const d=await fetch('/api/v1/drone/summary').then(r=>r.json()).catch(()=>null);if(!d)return;document.getElementById('dronePanel').innerHTML='<div class="status-row"><span>Flights</span><span class="status-val">'+d.total_flights+'</span></div><div class="status-row"><span>Critical</span><span class="status-val" style="color:var(--red)">'+d.critical_findings+'</span></div><div class="status-row"><span>Work orders</span><span class="status-val" style="color:var(--yellow)">'+d.work_orders_generated+'</span></div><div class="status-row"><span>Thermal anomalies</span><span class="status-val" style="color:var(--fire)">'+d.thermal_anomalies+'</span></div>';}
+async function loadMutualAid(){const d=await fetch('/api/v1/mutualaid/summary').then(r=>r.json()).catch(()=>null);if(!d)return;document.getElementById('mutualAidPanel').innerHTML='<div class="status-row"><span>Utilities</span><span class="status-val">'+d.network_utilities+'</span></div><div class="status-row"><span>Available</span><span class="status-val" style="color:var(--green)">'+d.utilities_available+'</span></div><div class="status-row"><span>Crews ready</span><span class="status-val">'+d.total_available_crews+'</span></div><div class="status-row"><span>Active requests</span><span class="status-val" style="color:var(--red)">'+d.active_aid_requests+'</span></div>';}
+async function loadRegulatory(){const d=await fetch('/api/v1/regulatory/summary').then(r=>r.json()).catch(()=>null);if(!d)return;document.getElementById('regulatoryPanel').innerHTML='<div class="status-row"><span>Updates</span><span class="status-val">'+d.total_updates+'</span></div><div class="status-row"><span>Critical</span><span class="status-val" style="color:var(--red)">'+d.critical+'</span></div><div class="status-row"><span>Action required</span><span class="status-val" style="color:var(--yellow)">'+d.action_required+'</span></div><div class="status-row"><span>Next deadline</span><span class="status-val" style="color:var(--fire)">'+d.next_deadline+'</span></div>';}
+async function loadLiDAR(){const d=await fetch('/api/v1/lidar/status').then(r=>r.json()).catch(()=>null);if(!d)return;document.getElementById('lidarPanel').innerHTML='<div class="status-row"><span>Status</span><span class="status-val" style="color:var(--green)">'+d.onboarding_status+'</span></div><div class="status-row"><span>Datasets</span><span class="status-val">'+d.datasets_found+'</span></div><div class="status-row"><span>Coverage</span><span class="status-val" style="color:var(--teal)">'+d.best_coverage_pct+'%</span></div><div class="status-row"><span>Spans</span><span class="status-val" style="color:var(--blue)">'+d.estimated_spans_coverable+'</span></div>';}
+async function loadOutage(){const d=await fetch('/api/v1/outage/summary').then(r=>r.json()).catch(()=>null);if(!d)return;document.getElementById('outagePanel').innerHTML='<div class="status-row"><span>Critical circuits</span><span class="status-val" style="color:var(--red)">'+d.critical_risk+'</span></div><div class="status-row"><span>Customers at risk 24h</span><span class="status-val" style="color:var(--fire)">'+d.customers_at_risk_24h.toLocaleString()+'</span></div><div class="status-row"><span>Highest risk circuit</span><span class="status-val" style="font-size:11px">'+d.highest_risk_circuit+'</span></div><div class="status-row"><span>24h outage probability</span><span class="status-val" style="color:var(--red)">'+d.highest_prob_24h+'%</span></div><div class="status-row"><span>Customer-hours at risk</span><span class="status-val" style="color:var(--yellow)">'+Math.round(d.total_predicted_customer_hours).toLocaleString()+'</span></div><div class="status-row"><span>Avg circuit probability</span><span class="status-val">'+d.avg_prob_24h+'%</span></div>';}
+async function loadAPIStatus(){const eps=['/weather/grid-impact','/predict/rankings?limit=1','/psps/summary','/satellite/summary','/carbon/summary','/crew/summary','/regulatory/summary','/mutualaid/summary','/drone/summary','/lidar/status'];const names=['Weather','Predictive','PSPS','Satellite','Carbon','Crew','Regulatory','Mutual Aid','Drone','LiDAR'];const results=await Promise.allSettled(eps.map(e=>fetchJSON(API+e)));document.getElementById('apiPanel').innerHTML=names.map((n,i)=>'<div class="status-row"><span style="font-family:monospace;font-size:11px">'+n+'</span><span style="font-size:11px;font-weight:600;color:'+(results[i].status=="fulfilled"&&results[i].value?'var(--green)':'var(--red)')+'">'+(results[i].status=="fulfilled"&&results[i].value?'ONLINE':'OFFLINE')+'</span></div>').join('')+'<div style="margin-top:8px;font-size:11px;color:var(--muted)">10 endpoints monitored</div>';}
+loadAll();
+setInterval(loadAll, 60000);
+</script>
+</body>
+</html>
